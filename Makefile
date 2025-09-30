@@ -36,9 +36,9 @@ clean:
 	rm -f aesdsocket
 	rm -f aesdsocket_test
 
-all: $(TARGET_SERVER)
+all: aesdsocket
 
-$(TARGET_SERVER):
+aesdsocket:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(INC_DIRS) $(SRC_FILES) -o $(TARGET_SERVER)
 
 test: server_test_runner
