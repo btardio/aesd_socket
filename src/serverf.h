@@ -14,6 +14,7 @@
 #include <sys/shm.h>
 #include <semaphore.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 void sig_handler(int signo);
 
