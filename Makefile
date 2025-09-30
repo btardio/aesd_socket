@@ -30,7 +30,7 @@ TARGET_TEST = aesdsocket_test
 SRC_FILES=src/serverf.c src/server.c
 TEST_SRC_FILES=$(UNITY_ROOT)/src/unity.c src/serverf.c test/server_test.c test/test_runners/server_test_runner.c
 INC_DIRS=-Isrc -I$(UNITY_ROOT)/src
-SYMBOLS=
+SYMBOLS=server_test.o
 
 clean:
 	rm -f aesdsocket
