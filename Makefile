@@ -19,10 +19,6 @@ LDFLAGS += -pthread
 
 default: all
 
-UNAME_P := $(shell uname -p)
-
-#COMPILER_EXECUTABLE=$(CROSS_COMPILE)gcc
-
 TARGET_SERVER = aesdsocket
 TARGET_TEST = aesdsocket_test
 
