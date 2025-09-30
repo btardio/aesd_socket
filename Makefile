@@ -17,7 +17,7 @@ CFLAGS += -Wold-style-definition
 
 LDFLAGS += -pthread
 
-default: all
+# default: aesdsocket
 
 TARGET_SERVER = aesdsocket
 TARGET_TEST = aesdsocket_test
@@ -32,13 +32,12 @@ TEST_SRC_FILES=$(UNITY_ROOT)/src/unity.c src/serverf.c test/server_test.c test/t
 INC_DIRS=-Isrc -I$(UNITY_ROOT)/src
 SYMBOLS=server_test.o
 
-clean:
-	rm -f aesdsocket
-	rm -f aesdsocket_test
 
-all: aesdsocket
+all: default
 
-aesdsocket:
+default: socketserver
+
+socketserver:
 	$(CC) $(CFLAGS) $(LDFLAGS) $(INC_DIRS) $(SRC_FILES) -o $(TARGET_SERVER)
 
 test: server_test_runner
@@ -49,7 +48,9 @@ server_test_runner: test/server_test.c
 	#$(info $(COMPILER_EXECUTABLE) -Wall $(CCFLAGS) $(TEST_OBJ))
 	#@($(COMPILER_EXECUTABLE) -Wall $(CCFLAGS) $(TEST_OBJ))
 
-
+clean:
+	rm -f aesdsocket
+	rm -f aesdsocket_test
 
 
 
