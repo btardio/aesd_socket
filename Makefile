@@ -1,4 +1,3 @@
-
 UNITY_ROOT=test/Unity/
 
 # CFLAGS=-std=c89
@@ -51,6 +50,7 @@ server_test_runner: test/server_test.c
 clean:
 	rm -f aesdsocket
 	rm -f aesdsocket_test
+
 
 
 

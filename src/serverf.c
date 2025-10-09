@@ -78,6 +78,37 @@ extern sem_t mutex;
 struct entry;
 
 
+size_t find_null(const char *buffer, size_t size) {
+    if (buffer == NULL) {
+        return -1; // Or handle as an error
+    }
+
+    // Find the last non-null character
+    // The memrchr function is a GNU extension, but can be implemented manually.
+    // In this example, we use a manual loop for portability.
+    for (size_t i = size; i > 0; --i) {
+        if (buffer[i - 1] != '\0') {
+            // The first null is right after the last non-null character
+            return i;
+        }
+    }
+
+    // If the entire buffer is null, the first trailing null is at index 0
+    return 0;
+}
+
+size_t custom_strlen(const char *str) {
+	size_t length = 0;
+
+	
+	while (str[length] != '\0') {
+		length++;
+	}
+
+
+	return length;
+}
+
 void sig_handler(int signo)
 {
     if (signo == SIGINT) {
@@ -110,9 +141,26 @@ void log_and_print(const char* fmt) {
     log_and_print_a(LOG_ERR, fmt);
 }
 
+int
+ioctl_set_msg_int(int file_desc, int* message)
+{
+	int ret_val;
+
+	ret_val = ioctl(file_desc, IOCTL_SET_MSG, message);
+
+	if (ret_val < 0) {
+		printf("ioctl_set_msg failed:%d\n", ret_val);
+		return -1;
+	}
+	return 0;
+}
+
+
     int
 read_from_client (const int filedes, char* buffer, int nbytes)
 {
+
+    unsigned long* sss;
 
     char fbuffer[BUFFER_SIZE+1];
     int sbytes;
@@ -120,6 +168,11 @@ read_from_client (const int filedes, char* buffer, int nbytes)
     FILE *file_pointer;
 
     bzero(fbuffer, BUFFER_SIZE+1);
+    int instruction_seek = 0;
+    unsigned long ioctl_index;
+    int ioctl_int_index;
+    int ioctl_offset;
+    int items_read;
 
     if (nbytes == 1) {
         // received a ""
@@ -128,6 +181,73 @@ read_from_client (const int filedes, char* buffer, int nbytes)
     }
     else
     {
+
+
+	// if instruction is, buffer is AESDCHAR_IOCSEEKTO:<index, offset>
+
+	printf("buffer: %s\n", buffer);
+	if(nbytes > 18 && 0 == strncmp("AESDCHAR_IOCSEEKTO:", buffer, 19)) {
+		instruction_seek = 1;
+		printf("received AESDCHAR_IOSEEKTO\n");
+		items_read = sscanf(buffer, "AESDCHAR_IOCSEEKTO:%lu,%d", &ioctl_index, &ioctl_offset);
+		//sscanf(buffer, "AESDCHAR_IOCSEEKTO:%d,%
+		printf("read ioctl_index: %lu and ioctl_offset: %d\n", ioctl_index, ioctl_offset);
+
+
+		
+		int* ctrl_code = malloc(sizeof(int));
+		*ctrl_code = ioctl_index;
+
+		int file_desc;
+
+
+		file_desc = open("/dev/aesdchar", 0);
+		if (file_desc < 0) {
+			printf("Error opening file\n");
+			return -1;
+		}
+		ioctl_set_msg_int(file_desc, ctrl_code);
+
+		close(file_desc);
+
+
+
+
+
+
+
+/*
+
+	FILE* file = fopen(FILENAME_AESD_DEVICE, "r");
+        if (file == NULL) {
+            printf("Error opening file\n");
+            return 1;
+        }
+
+	
+	ioctl_index = 0x0000000003;
+;
+
+	sss = malloc(sizeof(unsigned long*));
+	//*sss = malloc(sizeof(unsigned long));
+	*sss = 0xFFFFFFFFFF;
+
+	printf("sss %lX\n", sss);
+	printf("*sss %lX\n", *sss);
+//	printf("**sss %lX\n", (unsigned long*)**sss);
+
+
+	ioctl(file, MY_DEVICE_SET_VALUE, sss);
+//	ioctl(file, MY_DEVICE_SET_VALUE, *sss);
+//	ioctl(file, MY_DEVICE_SET_VALUE, **sss);
+//	free(*sss);
+	free(sss);
+
+	fclose(file);
+		printf("!!!\n");
+		*/
+	}
+
 
 
 #ifdef APPENDWRITE
@@ -168,7 +288,6 @@ read_from_client (const int filedes, char* buffer, int nbytes)
                 perror("shmdt child");
                 exit(1);
             }
-
             sem_post(&mutex);
 
         }
@@ -196,43 +315,118 @@ read_from_client (const int filedes, char* buffer, int nbytes)
 
 #ifdef APPENDWRITE
 	// write to file that is compared
-        if (fputs(buffer, file_pointer) == EOF) {
-            perror("Error writing to file");
-            fclose(file_pointer);
-            return -1;
-        }
+        
+	
+
+	
+	if (instruction_seek == 0) {
+		printf("\n!!!! writing to file. !!!!\n");	
+		if (fputs(buffer, file_pointer) == EOF) {
+	        	perror("Error writing to file");
+	        	fclose(file_pointer);
+	        	return -1;
+	        }
+	}
 
         if (fclose(file_pointer) == EOF) {
             perror("Error closing the file");
             return -11;
         }
 
-#ifdef USE_AESD_CHAR_DEVICE
+//#ifdef USE_AESD_CHAR_DEVICE
 	FILE* file = fopen(FILENAME_AESD_DEVICE, "r");
-#else
-        FILE* file = fopen(FILENAME, "r");
-#endif
+//#else
+//        FILE* file = fopen(FILENAME, "r");
+//#endif
         if (file == NULL) {
             perror("Error opening file");
             return 1;
         }
 
+	// almost forgot to ask - stack stack stack
+	//
+	
+
+
+//#ifdef USE_AESD_CHAR_DEVICE
+	
+//	openlog("aesdsocketthread", LOG_PID, LOG_USER);
+
+  //  unsigned long ioctl_index;
+    //int ioctl_int_index;
+   // int ioctl_offset;
+   // int items_read;
+
+
+
+
+
+//	ioctl_index = 0x0000000003;
+//;
+
+//	sss = malloc(sizeof(unsigned long));
+	//*sss = 0x0000000003;
+	//
+//	*sss = 0x0000030303;
+
+//	syslog(LOG_ERR, "sss %lX\n", sss);
+//	syslog(LOG_ERR, "*sss %lX\n", *sss);
+
+//	fprintf(debug, "!!!!!!!!!!!!!sending address"); //: %lX\n", sss);
+
+//	ioctl(file, MY_DEVICE_SET_VALUE, sss);
+
+//	free(sss);
+
+//	closelog();
+//	ioctl(file, MY_DEVICE_SET_VALUE, 1);
+	
+//	ioctl(file, MY_DEVICE_SET_VALUE, 0x0000000003);
+	
+
+//#endif
+
+//	if ( instruction_seek == 1 ) {
+//		fseek(file, ioctl_offset, SEEK_SET);
+//	} 
+	
+
         fseek(file, 0, SEEK_END);
         long file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
+	
+	if ( instruction_seek == 1 ) {
+		printf("seeking somewhere\n");
+		fseek(file, ioctl_offset, SEEK_SET);
+	} 
 
-        size_t bytes_read = fread(fbuffer, 1, file_size, file);
-        if (bytes_read != (size_t)file_size) {
-            perror("Error reading file");
-            fclose(file);
-            return 1;
-        }
+
+        size_t bytes_read;
+      	 
+	if ( instruction_seek == 1 ) { 
+		bytes_read = fread(fbuffer, 1, file_size, file);
+	} else {
+		bytes_read = fread(fbuffer, 1, file_size, file);
+	}
+
+//        if (bytes_read != (size_t)file_size) {
+//            perror("Error reading file");
+//            fclose(file);
+//            return 1;
+//        }
 
         fbuffer[file_size] = '\0';
 
         fclose(file);
 	printf("filedes: %d\n", filedes);
-        sbytes = write(filedes, fbuffer, file_size);
+
+	int firstnullchar = find_null(fbuffer, file_size); //custom_strlen(fbuffer);
+
+        printf("0firstnullchar: %d\n", firstnullchar);
+	printf("bytes_read: %d\n", bytes_read);
+	printf("file_size: %d\n", file_size);
+	printf("sending: %.*s\n", file_size, fbuffer);
+	sbytes = write(filedes, fbuffer, firstnullchar ); // bytes_read); //file_size);
 	printf("...\n");
 #else
 
@@ -381,6 +575,7 @@ void initialize() {
         exit(1);
     }
 
+
     if (sem_init(&mutex, 0, 1) != 0) {
         perror("sem_init failed");
         exit(EXIT_FAILURE);
@@ -395,6 +590,15 @@ void initialize() {
 }
 
 int pmain(void) {
+
+
+
+
+    unsigned long* sss;
+    unsigned long ioctl_index;
+    int ioctl_int_index;
+    int ioctl_offset;
+    int items_read;
 
     initialize();
 
